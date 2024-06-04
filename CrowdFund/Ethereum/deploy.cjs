@@ -3,8 +3,8 @@ const {Web3} = require("web3");
 const compiledFactory = require("./build/CampaignFactory.json");
 
 const provider = new HDWalletProvider(
-    'common pair water print soul install visit narrow salon diary hockey solid',
-    'https://sepolia.infura.io/v3/3238ca6f194a4f87a2f3e94f91ed43f4'
+    mnemonics,
+    url
 );
 const web3 = new Web3(provider);
 
