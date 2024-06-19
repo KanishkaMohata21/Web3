@@ -5,7 +5,7 @@ import Layout from "../../components/layout";
 import getCampaign from "../../Ethereum/campaign";
 import web3 from "../../Ethereum/web3";
 import Contribution from "../../components/contributeForm";
-import { Link, Router } from '../../routes'
+import { Link } from "../../routes";
 
 export default function Show() {
   const router = useRouter();
@@ -15,15 +15,20 @@ export default function Show() {
     requestsCount: "",
     approverCount: "",
     manager: "",
+    name: "",
+    description: "",
+    outcome: "",
+    estimatedTime: "",
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const address = await router.query.address;
+        const address = router.query.address;
         if (!address) {
           console.log("Address not available in query parameters");
           Router.pushRoute('/');
+          return;
         }
 
         console.log("Address from URL:", address);
@@ -34,14 +39,25 @@ export default function Show() {
         const summaryData = await campaign.methods.getSummary().call();
         console.log("Summary data:", summaryData);
 
+        // Fetch additional details
+        const name = await campaign.methods.projectName().call();
+        const description = await campaign.methods.projectDescription().call();
+        const outcome = await campaign.methods.projectOutcome().call();
+        const estimatedTime = summaryData[7].toString(); // Ensure to convert to string
+
         // Update state with correct property accesses
         setSummary({
           minimumContribution: summaryData[0].toString(),
           balance: web3.utils.fromWei(summaryData[1], "ether"), // Convert balance from wei to ether
           requestsCount: summaryData[2].toString(),
           approverCount: summaryData[3].toString(),
-          manager: summaryData[4],
+          manager: summaryData[8],
+          name: name,
+          description: description,
+          outcome: outcome,
+          estimatedTime: estimatedTime,
         });
+
         console.log("Updated summary state:", summary);
       } catch (error) {
         console.error("Error fetching campaign summary:", error);
@@ -60,6 +76,46 @@ export default function Show() {
             <Card.Group>
               <Card>
                 <Card.Content>
+                  <Card.Header>Name</Card.Header>
+                  <Card.Description>
+                    The name of the project associated with this campaign.
+                    <br />
+                    <strong>{summary.name || "Loading..."}</strong>
+                  </Card.Description>
+                </Card.Content>
+              </Card>
+              <Card>
+                <Card.Content>
+                  <Card.Header>Estimated Time</Card.Header>
+                  <Card.Description>
+                    The estimated time to complete the project.
+                    <br />
+                    <strong>{summary.estimatedTime || "Loading..."}</strong>
+                  </Card.Description>
+                </Card.Content>
+              </Card>
+              <Card style={{ width: "590px" }}>
+                <Card.Content>
+                  <Card.Header>Description</Card.Header>
+                  <Card.Description>
+                    The description of the project associated with this campaign.
+                    <br />
+                    <strong>{summary.description || "Loading..."}</strong>
+                  </Card.Description>
+                </Card.Content>
+              </Card>
+              <Card style={{ width: "590px" }}>
+                <Card.Content>
+                  <Card.Header>Outcome</Card.Header>
+                  <Card.Description>
+                    The expected outcome of the project.
+                    <br />
+                    <strong>{summary.outcome || "Loading..."}</strong>
+                  </Card.Description>
+                </Card.Content>
+              </Card>
+              <Card>
+                <Card.Content>
                   <Card.Header>Minimum Contribution</Card.Header>
                   <Card.Description>
                     The minimum amount of wei required to become an approver of
@@ -71,6 +127,7 @@ export default function Show() {
                   </Card.Description>
                 </Card.Content>
               </Card>
+
               <Card>
                 <Card.Content>
                   <Card.Header>Balance</Card.Header>
@@ -104,7 +161,7 @@ export default function Show() {
                   </Card.Description>
                 </Card.Content>
               </Card>
-              <Card style={{ width: "600px" }}>
+              <Card style={{ width: "590px" }}>
                 <Card.Content>
                   <Card.Header>Manager</Card.Header>
                   <Card.Description>
@@ -121,7 +178,11 @@ export default function Show() {
             <Contribution />
             <Link route={`/campaigns/${router.query.address}/requests`}>
               <a className="item">
-                <Button content="View Requests" primary style={{ marginTop: '30px' }} />
+                <Button
+                  content="View Requests"
+                  primary
+                  style={{ marginTop: "30px" }}
+                />
               </a>
             </Link>
           </Grid.Column>
